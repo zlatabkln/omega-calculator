@@ -69,7 +69,7 @@ class MyLexer:
     def token_minus(self, tokens):
         count = 0
         while self.curr_char is not None and self.curr_char == '-':
-            if self.prev_char is None and self.check_next() not in DIGITS:
+            if (self.prev_char is None or self.prev_char == '(') and self.check_next() not in DIGITS:
                 tokens.append(Token('INT', 0, 0, None))
             elif self.is_sign():
                 if count != 0:
@@ -94,7 +94,10 @@ class MyLexer:
     def make_token_list(self):
         tokens = []
         while self.curr_char is not None:
-            if self.curr_char in MINUS:  # '-'
+            if str(self.curr_char).isspace():  # if char is blanc character, get next character
+                # this check exists for tests only - in general, the check happens in input module
+                self.get_next()
+            elif self.curr_char in MINUS:  # '-'
                 tokens.append(self.token_minus(tokens))
             elif self.curr_char in DIGITS or self.curr_char == '.':  # number
                 tokens.append(self.make_token_from_num(self.make_number(1)))
