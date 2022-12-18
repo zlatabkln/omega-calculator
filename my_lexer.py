@@ -94,9 +94,7 @@ class MyLexer:
     def make_token_list(self):
         tokens = []
         while self.curr_char is not None:
-            if str(self.curr_char).isspace():  # if char is blanc character, get next character
-                self.get_next()
-            elif self.curr_char in MINUS:  # '-'
+            if self.curr_char in MINUS:  # '-'
                 tokens.append(self.token_minus(tokens))
             elif self.curr_char in DIGITS or self.curr_char == '.':  # number
                 tokens.append(self.make_token_from_num(self.make_number(1)))
