@@ -10,14 +10,15 @@ from node_classes import *
             / \
            ~   3
             \
-             2'''
+             2
+             '''
 
 
 class MyParser:
     def __init__(self, tokens):
         self.tokens = tokens  # list of tokens from the lexer
         self.curr_tok = None
-        self.prev_tok = None
+        self.prev_tok_index = -2
         self.curr_tok_index = -1
         self.get_next()
 
@@ -25,11 +26,13 @@ class MyParser:
     def get_next(self):
         self.curr_tok_index += 1
         if self.curr_tok_index < len(self.tokens):
-            self.prev_tok = self.curr_tok
+            self.prev_tok_index = self.curr_tok_index - 1
             self.curr_tok = self.tokens[self.curr_tok_index]
+        else:
+            self.prev_tok_index = self.curr_tok_index
         return self.curr_tok
 
-    # token is number or parentheses - converts to number node and deals with expression in parentheses
+    # token can be a number or a parentheses - converts to number node and deals with expression in parentheses
     def priority_zero(self):
         tok = self.curr_tok
         if tok.level == 0:
@@ -37,6 +40,10 @@ class MyParser:
              priority - 1 '''
             if tok.type in LP.values():
                 self.get_next()
+                # null parentheses check
+                if self.curr_tok.type in RP.values():
+                    raise SyntaxException("null parentheses")
+                # going through the expression, starting with the lowest possible priority
                 num = self.priority_one()
                 if self.curr_tok.type in RP.values():
                     self.get_next()
@@ -82,15 +89,14 @@ class MyParser:
     def start_priority(self):
         list_of_priorities = []
         for tok in self.tokens:
-            if tok.level not in [-1, -2]:
-                list_of_priorities.append(tok.level)
+            list_of_priorities.append(tok.level)
         list_of_priorities.sort(reverse=True)
         max_priority = list_of_priorities[0]
+        if max_priority == 0:
+            raise AbsentOperatorException(None)
         list_of_priorities = list(filter(lambda x: x != 0, list_of_priorities))
         list_of_priorities.sort()
         min_priority = list_of_priorities[0]
-        if max_priority == 0:
-            raise AbsentOperatorException(None)
         if min_priority == 1:
             return self.priority_one()
         elif min_priority == 2:
@@ -111,9 +117,13 @@ class MyParser:
 
     def op_to_tree(self, case_function, level):
         left = case_function()
-        while self.curr_tok.level == level:
+        while self.curr_tok.level == level and self.curr_tok_index != self.prev_tok_index:
             op_tok = self.curr_tok
             self.get_next()
+            if self.curr_tok.type == 'RP':
+                right = None
+                left = OpNode(left, op_tok, right)
+                return left
             right = case_function()
             left = OpNode(left, op_tok, right)
         return left
