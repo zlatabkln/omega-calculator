@@ -6,21 +6,31 @@ from my_token import *
  - object that'll represent char as type and, if it's a number, value'''
 
 
+# make_token_from_num - gets a number(int or float) and returns a token matching number's type
+def make_token_from_num(num) -> Token:
+    if type(num) == int:
+        t_type = 'INT'
+    else:
+        t_type = 'FLOAT'
+    return Token(t_type, num, 0, None)
+
+
 class MyLexer:
     def __init__(self, expression):
         self.expression = expression  # given expression
         self.pos = -1  # current position
         self.curr_char = None  # char on current position
         self.prev_char = None  # char on previous position (for minus token)
+        self.count_par = 0
         self.get_next()  # goes to the next character in expression
 
     # returns the value of the next char if exists
-    def check_next(self):
+    def check_next(self) -> chr:
         if self.pos + 1 < len(self.expression):
             return self.expression[self.pos + 1]
 
     # goes to the next char if exists
-    def get_next(self):
+    def get_next(self) -> chr:
         self.pos += 1
         self.prev_char = self.curr_char
         if self.pos < len(self.expression):
@@ -29,10 +39,10 @@ class MyLexer:
             self.curr_char = None
 
     # make_number function - gets all the digits of the number and returns signed int or float
-    def make_number(self, sign):
+    def make_number(self, sign: chr):
         num_str = ""
         dots = 0
-        while self.curr_char is not None and (self.curr_char in DIGITS or self.curr_char == '.'):
+        while self.curr_char is not None and self.curr_char in DIGITS:
             if self.curr_char == '.':
                 if dots != 0:
                     raise SyntaxException("dots", None)
@@ -51,14 +61,6 @@ class MyLexer:
                 num_str += '0'
             return float(num_str) * sign
 
-    # make_token_from_num - gets a number(int or float) and returns a token matching number's type
-    def make_token_from_num(self, num):
-        if type(num) == int:
-            t_type = 'INT'
-        else:
-            t_type = 'FLOAT'
-        return Token(t_type, num, 0, None)
-
     ''' token_minus - counts minuses and optimises to final operator - + or -, creates matching token
      if minus is a sign:
        - if there were other minus operators in a row directly before him - create a token from them and exit
@@ -66,7 +68,7 @@ class MyLexer:
        - if sign minus comes by himself (or we entered this function second time for him) - add to the
        following number and return a number token'''
 
-    def token_minus(self, tokens):
+    def token_minus(self, tokens: list):
         count = 0
         while self.curr_char is not None and self.curr_char == '-':
             if (self.prev_char is None or self.prev_char == '(') and self.check_next() not in DIGITS:
@@ -75,7 +77,7 @@ class MyLexer:
                 if count != 0:
                     break
                 self.get_next()
-                return self.make_token_from_num(self.make_number(-1))
+                return make_token_from_num(self.make_number(-1))
             count += 1
             self.get_next()
         if count % 2 == 0:
@@ -91,7 +93,7 @@ class MyLexer:
             return False
 
     # create a list of tokens from the expression
-    def make_token_list(self):
+    def make_token_list(self) -> list:
         tokens = []
         while self.curr_char is not None:
             if str(self.curr_char).isspace():  # if char is blanc character, get next character
@@ -100,7 +102,7 @@ class MyLexer:
             elif self.curr_char in MINUS:  # '-'
                 tokens.append(self.token_minus(tokens))
             elif self.curr_char in DIGITS or self.curr_char == '.':  # number
-                tokens.append(self.make_token_from_num(self.make_number(1)))
+                tokens.append(make_token_from_num(self.make_number(1)))
             else:  # different operators
                 if any(self.curr_char in sublist for sublist in DU_OPERATORS.keys()):
                     t_d = DU_OPERATORS.get(self.curr_char)
@@ -110,8 +112,16 @@ class MyLexer:
                     t_d = R_UN_OPERATORS.get(self.curr_char)
                 elif any(self.curr_char in sublist for sublist in PAR.keys()):
                     t_d = PAR.get(self.curr_char)
+                    if t_d.get("type") == 'RP':
+                        self.count_par -= 1
+                        if self.count_par < 0:
+                            raise SyntaxException("rp")
+                    else:
+                        self.count_par += 1
                 else:  # forbidden character
                     raise LexError(self.curr_char)
                 tokens.append(Token(t_d.get("type"), self.curr_char, t_d.get("level"), t_d.get("func")))
                 self.get_next()
+        if self.count_par != 0:
+            raise SyntaxException("lp")
         return tokens
