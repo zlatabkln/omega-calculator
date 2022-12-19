@@ -5,16 +5,11 @@ from calculator import *
 
 
 def run(text):
-  #1.Lexer
-    lex = MyLexer(text) 
-    tokens = lex.make_token_list() 
-  #2.Parser
+    lex = MyLexer(text)
+    tokens = lex.make_token_list()
     pars = MyParser(tokens)
     tree = pars.parse()
-  #3.Calculation
     res = calculate(tree)
     return res
 
-
-print(run(input_modul.input_func()))
-
+# print(run(input_modul.input_func()))
