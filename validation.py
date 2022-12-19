@@ -21,7 +21,7 @@ def valid_div(oprnd1, oprnd2):
         return div_func(oprnd1, oprnd2)
     except ZeroDivisionError:
         print("Division by zero")
-        exit(1)
+        exit("div zero")
 
 
 def valid_pow(oprnd1, oprnd2):
@@ -29,7 +29,7 @@ def valid_pow(oprnd1, oprnd2):
         return pow_func(oprnd1, oprnd2)
     except ValueError:
         print("Unable to calculate complex number")
-        exit(1)
+        exit("cmplx num")
 
 
 def valid_modulo(oprnd1, oprnd2):
@@ -37,7 +37,7 @@ def valid_modulo(oprnd1, oprnd2):
         return modulo_func(oprnd1, oprnd2)
     except ArithmeticError:
         print("Modulo by zero")
-        exit(1)
+        exit("mod zero")
 
 
 def valid_max(oprnd1, oprnd2):
@@ -61,7 +61,7 @@ def valid_sum_digits(oprnd):
 
 
 def valid_factorial(oprnd):
-    if type(oprnd) != int:
+    if type(oprnd) != int and round(oprnd) - oprnd != 0:
         raise TypeError("Factorial requires integer operand")
     if oprnd < 0:
         raise ValueError("Factorial requires positive operand")
