@@ -3,7 +3,7 @@ from node_classes import *
 # parser will create a tree from token list, when the parent node is the operator, and leaves are operands
 # tree is build from last priority(on top) to the highest(bottom)
 
-'''exaple:
+'''example:
 1+~2*3 =>  +
           / \
          1   *
@@ -34,25 +34,25 @@ class MyParser:
 
     # token can be a number or a parentheses - converts to number node and deals with expression in parentheses
     def priority_zero(self):
-        tok = self.curr_tok
-        if tok.level == 0:
-            '''parentheses - goes from left to right parentheses and runs over expression between from the lowest 
-             priority - 1 '''
-            if tok.type in LP.values():
-                self.get_next()
-                # null parentheses check
-                if self.curr_tok.type in RP.values():
-                    raise SyntaxException("null parentheses")
-                # going through the expression, starting with the lowest possible priority
-                num = self.priority_one()
-                if self.curr_tok.type in RP.values():
-                    self.get_next()
-                    return num
-                else:
-                    raise AbsentOperatorException("Absent right parentheses")
-            else:
+        if self.curr_tok.level == 0:
+            if self.curr_tok.type in ['INT', 'FLOAT']:
+                tok = self.curr_tok
                 self.get_next()
                 return NumNode(tok)
+            elif self.curr_tok.type in LP.values():
+                '''parentheses - goes from left to right parentheses and runs over expression between 
+                from the lowest priority - 1 '''
+                self.get_next()
+                # null parentheses handling
+                if self.curr_tok.type in RP.values():
+                    raise SyntaxException("null parentheses")
+                expression = self.priority_one()
+                if self.curr_tok.type in RP.values():
+                    self.get_next()
+                    return expression
+                '''
+                else:
+                    raise AbsentOperatorException("Absent right parentheses")'''
 
     '''priority functions - start_priority calls for the lowest existing priority function, 
       and she calls for the one higher than her. It goes from 1 to 7,
@@ -90,11 +90,10 @@ class MyParser:
         list_of_priorities = []
         for tok in self.tokens:
             list_of_priorities.append(tok.level)
-        list_of_priorities.sort(reverse=True)
-        max_priority = list_of_priorities[0]
-        if max_priority == 0:
-            raise AbsentOperatorException(None)
         list_of_priorities = list(filter(lambda x: x != 0, list_of_priorities))
+        # check that there is at least one operator
+        if len(list_of_priorities) == 0:
+            raise AbsentOperatorException()
         list_of_priorities.sort()
         min_priority = list_of_priorities[0]
         if min_priority == 1:
@@ -120,10 +119,6 @@ class MyParser:
         while self.curr_tok.level == level and self.curr_tok_index != self.prev_tok_index:
             op_tok = self.curr_tok
             self.get_next()
-            if self.curr_tok.type == 'RP':
-                right = None
-                left = OpNode(left, op_tok, right)
-                return left
             right = case_function()
             left = OpNode(left, op_tok, right)
         return left
