@@ -44,7 +44,7 @@ def calculate(tree, res=0):
 calculation function, and returns the numeric result'''
 
 
-def commit_operation(operator, oprnd1, oprnd2):
+def commit_operation(operator: OpNode, oprnd1, oprnd2):
     if oprnd1 is None:
         if type(oprnd2) != Token:
             return operator.func(oprnd2)
