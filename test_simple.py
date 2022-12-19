@@ -1,6 +1,6 @@
 import pytest
 import main
-from my_exception import *
+
 
 
 def test_add():
